@@ -11,35 +11,56 @@
             gap: 1px;
             margin-top: 20px;
         }
+
         .cell {
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             border: 1px solid black;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .controls input{
+
+        .controls input {
             height: 30px;
+            width: 50px;
             font-size: 18px;
             padding: 5px;
             border: 1px solid black;
             margin-top: 20px;
         }
-        .controls button{
+
+        .controls button {
             height: 40px;
             font-size: 18px;
             padding: 5px;
             border: 1px solid black;
             margin-top: 20px;
         }
+
+        #forbidden {
+            width: 300px;
+        }
+
         .legend {
             font-size: 20px;
         }
-        .start { background-color: green; }
-        .goal { background-color: blue; }
-        .forbidden { background-color: red; }
-        .path { background-color: orange; }
+
+        .start {
+            background-color: green;
+        }
+
+        .goal {
+            background-color: blue;
+        }
+
+        .forbidden {
+            background-color: red;
+        }
+
+        .path {
+            background-color: orange;
+        }
     </style>
 </head>
 
@@ -64,129 +85,134 @@
     </div>
     <div class="legend">
         <h2>Legend</h2>
-        <div >Start - green</div>
-        <div >Goal - blue</div>
+        <div>Start - green</div>
+        <div>Goal - blue</div>
         <div>Forbidden - red</div>
         <div>Path - orange </div>
     </div>
     <div id="gridContainer" class="grid"></div>
+    <div class="text" id="text"></div>
     <script>
-let grid = [];
-let start = { x: 0, y: 0 };
-let goal = { x: 4, y: 4 };
-let forbidden = new Set();
-let width = 5;
-let height = 5;
+        let grid = [];
+        let start = { x: 0, y: 0 };
+        let goal = { x: 4, y: 4 };
+        let forbidden = new Set();
+        let width = '';
+        let height = '';
 
-function initializeGrid() {
-    width = parseInt(document.getElementById('width').value);
-    height = parseInt(document.getElementById('height').value);
-    start = parseCoordinates(document.getElementById('start').value);
-    goal = parseCoordinates(document.getElementById('goal').value);
-    forbidden = new Set(document.getElementById('forbidden').value.split(';').map(coord => coord.trim()));
+        function initializeGrid() {
+            width = parseInt(document.getElementById('width').value);
+            height = parseInt(document.getElementById('height').value);
+            start = parseCoordinates(document.getElementById('start').value);
+            goal = parseCoordinates(document.getElementById('goal').value);
+            forbidden = new Set(document.getElementById('forbidden').value.split(';').map(coord => coord.trim()));
 
-    grid = Array.from({ length: height }, () => Array(width).fill(0));
+            grid = Array.from({ length: height }, () => Array(width).fill(0));
 
-    forbidden.forEach(coord => {
-        const { x, y } = parseCoordinates(coord);
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            grid[y][x] = -1; // Mark forbidden squares
+            forbidden.forEach(coord => {
+                const { x, y } = parseCoordinates(coord);
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    grid[y][x] = -1; // Mark forbidden squares
+                }
+            });
+
+            renderGrid();
         }
-    });
 
-    renderGrid();
-}
+        function parseCoordinates(coord) {
+            const [x, y] = coord.split(',').map(Number);
+            return { x, y };
+        }
 
-function parseCoordinates(coord) {
-    const [x, y] = coord.split(',').map(Number);
-    return { x, y };
-}
-
-function renderGrid() {
-    const gridContainer = document.getElementById('gridContainer');
-    gridContainer.innerHTML = '';
-    gridContainer.style.gridTemplateColumns = `repeat(${width}, 30px)`;
-    gridContainer.style.gridTemplateRows = `repeat(${height}, 30px)`;
-
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            if (x === start.x && y === start.y) {
-                cell.classList.add('start');
-            } else if (x === goal.x && y === goal.y) {
-                cell.classList.add('goal');
-            } else if (grid[y][x] === -1) {
-                cell.classList.add('forbidden');
+        function renderGrid() {
+            const gridContainer = document.getElementById('gridContainer');
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${width}, 40px)`;
+            gridContainer.style.gridTemplateRows = `repeat(${height}, 40px)`;
+            for (let y = height - 1; y >= 0; y--) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (x === start.x && y === start.y) {
+                        cell.classList.add('start');
+                    } else if (x === goal.x && y === goal.y) {
+                        cell.classList.add('goal');
+                    } else if (grid[y][x] === -1) {
+                        cell.classList.add('forbidden');
+                    }
+                    gridContainer.appendChild(cell);
+                }
             }
-            gridContainer.appendChild(cell);
-        }
-    }
-}
-
-function runDFS() {
-    const visited = new Set();
-    const path = [];
-    const stack = [{ x: start.x, y: start.y, path: [] }];
-
-    while (stack.length > 0) {
-        const { x, y, path } = stack.pop();
-        if (x === goal.x && y === goal.y) {
-            renderPath(path);
-            return;
         }
 
-        if (visited.has(`${x},${y}`) || grid[y][x] === -1) {
-            continue;
+        function runDFS() {
+            const visited = new Set();
+            const path = [];
+            const stack = [{ x: start.x, y: start.y, path: [] }];
+            while (stack.length > 0) {
+                const current = stack.pop();
+                const x = current.x;
+                const y = current.y;
+                const path = current.path;
+                if (x === goal.x && y === goal.y) {
+                    renderPath(path);
+                    return;
+                }
+                if (visited.has(x + ',' + y) || grid[y][x] === -1) {
+                    continue;
+                }
+                visited.add(x + ',' + y);
+                const newPath = path.slice();
+                newPath.push({ x: x, y: y });
+                if (y > 0) stack.push({ x: x, y: y - 1, path: newPath });
+                if (x > 0) stack.push({ x: x - 1, y: y, path: newPath });
+                if (x < width - 1) stack.push({ x: x + 1, y: y, path: newPath });
+                if (y < height - 1) stack.push({ x: x, y: y + 1, path: newPath });
+                console.log(newPath);
+            }
+
+            alert("No path found!");
         }
 
-        visited.add(`${x},${y}`);
-        const newPath = [...path, { x, y }];
-        if (y > 0) stack.push({ x, y: y - 1, path: newPath }); // up
-        if (x > 0) stack.push({ x: x - 1, y, path: newPath }); // left
-        if (x < width - 1) stack.push({ x: x + 1, y, path: newPath }); // right
-        if (y < height - 1) stack.push({ x, y: y + 1, path: newPath }); // down
-    }
-    alert("No path found!");
-}
-function runBFS() {
-    const visited = new Set();
-    const queue = [{ x: start.x, y: start.y, path: [] }]; // Use a queue instead of a stack
-
-    while (queue.length > 0) {
-        const { x, y, path } = queue.shift(); // Dequeue the first element (FIFO)
-        if (x === goal.x && y === goal.y) {
-            renderPath(path);
-            return;
+        function runBFS() {
+            const visited = new Set();
+            const queue = [{ x: start.x, y: start.y, path: [] }];
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const x = current.x;
+                const y = current.y;
+                const path = current.path;
+                if (x === goal.x && y === goal.y) {
+                    renderPath(path);
+                    return;
+                }
+                if (visited.has(x + ',' + y) || grid[y][x] === -1) {
+                    continue;
+                }
+                visited.add(x + ',' + y);
+                const newPath = path.slice();
+                newPath.push({ x: x, y: y });
+                if (y > 0) queue.push({ x: x, y: y - 1, path: newPath }); //up
+                if (x > 0) queue.push({ x: x - 1, y: y, path: newPath });//left
+                if (x < width - 1) queue.push({ x: x + 1, y: y, path: newPath });//right
+                if (y < height - 1) queue.push({ x: x, y: y + 1, path: newPath });//down
+                console.log(newPath);
+            }
+            alert("No path found!");
         }
 
-        if (visited.has(`${x},${y}`) || grid[y][x] === -1) {
-            continue;
+        function renderPath(path) {
+            const gridContainer = document.getElementById('gridContainer');
+            const cells = gridContainer.getElementsByClassName('cell');
+
+            path.forEach(({ x, y }) => {
+                const index = (height - 1 - y) * width + x;
+                if (!cells[index].classList.contains('start') && !cells[index].classList.contains('goal')) {
+                    cells[index].classList.add('path');
+                }
+            });
         }
-
-        visited.add(`${x},${y}`);
-        const newPath = [...path, { x, y }];
-
-        // Order: up, left, right, down
-        if (y > 0) queue.push({ x, y: y - 1, path: newPath }); // up
-        if (x > 0) queue.push({ x: x - 1, y, path: newPath }); // left
-        if (x < width - 1) queue.push({ x: x + 1, y, path: newPath }); // right
-        if (y < height - 1) queue.push({ x, y: y + 1, path: newPath }); // down
-    }
-
-    alert("No path found!");
-}
-function renderPath(path) {
-    const gridContainer = document.getElementById('gridContainer');
-    const cells = gridContainer.getElementsByClassName('cell');
-
-    path.forEach(({ x, y }) => {
-        const index = y * width + x;
-        if (!cells[index].classList.contains('start') && !cells[index].classList.contains('goal')) {
-            cells[index].classList.add('path');
-        }
-    });
-}
+        initializeGrid()
     </script>
 </body>
 
