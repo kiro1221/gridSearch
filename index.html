@@ -29,9 +29,12 @@
             border: 1px solid black;
             margin-top: 20px;
         }
-        #text{  
+
+        #text {
             font-size: 22px;
-            margin: 20px;}
+            margin: 20px;
+        }
+
         .controls button {
             height: 40px;
             font-size: 18px;
@@ -85,6 +88,10 @@
         <button onclick="runDFS()">Run DFS</button>
         <button onclick="runBFS()">Run BFS</button>
         <button onclick="runIDDFS()">Run IDDFS</button>
+        <button onclick="runAStar()">Run A*</button>
+        <button onclick="runGreedyBestFirst()">Run Greedy search</button>
+        <button onclick="runUCS()">Run UCS</button>
+
     </div>
     <div class="legend">
         <h2>Legend</h2>
@@ -242,6 +249,97 @@
             }
             return null;
         }
+        function runAStar() {
+            const priorityQueue = [{ x: start.x, y: start.y, g: 0, h: manhattan(start.x, start.y), path: [] }];
+            const visited = new Set();
+
+            while (priorityQueue.length > 0) {
+                priorityQueue.sort((a, b) => (a.g + a.h) - (b.g + b.h)); // Sort by f = g + h
+                const current = priorityQueue.shift();
+                const { x, y, g, path } = current;
+
+                if (x === goal.x && y === goal.y) {
+                    renderPath(path);
+                    console.log("Final Path:", path);
+                    return;
+                }
+
+                if (visited.has(x + ',' + y) || grid[y][x] === -1) {
+                    continue;
+                }
+
+                visited.add(x + ',' + y);
+                const newPath = path.concat([{ x, y }]);
+                const neighbors = [
+                    { x: x, y: y + 1 }, // Down
+                    { x: x - 1, y: y }, // Left
+                    { x: x + 1, y: y }, // Right
+                    { x: x, y: y - 1 }  // Up
+                ];
+
+                for (const neighbor of neighbors) {
+                    if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >= 0 && neighbor.y < height && !visited.has(neighbor.x + ',' + neighbor.y) && grid[neighbor.y][neighbor.x] !== -1) {
+                        priorityQueue.push({
+                            x: neighbor.x,
+                            y: neighbor.y,
+                            g: g + 1,
+                            h: manhattan(neighbor.x, neighbor.y),
+                            path: newPath
+                        });
+                    }
+                }
+            }
+            alert("No path found");
+        }
+        function runGreedyBestFirst() {
+            const priorityQueue = [{ x: start.x, y: start.y, h: manhattan(start.x, start.y), path: [] }];
+            const visited = new Set();
+
+            while (priorityQueue.length > 0) {
+                priorityQueue.sort((a, b) => a.h - b.h); // Sort by heuristic value (h)
+                const current = priorityQueue.shift();
+                const { x, y, path } = current;
+
+                if (x === goal.x && y === goal.y) {
+                    renderPath(path);
+                    console.log("Final Path:", path);
+                    return;
+                }
+
+                if (visited.has(x + ',' + y) || grid[y][x] === -1) {
+                    continue;
+                }
+
+                visited.add(x + ',' + y);
+                const newPath = path.concat([{ x, y }]);
+                const neighbors = [
+                    { x: x, y: y + 1 }, // Down
+                    { x: x - 1, y: y }, // Left
+                    { x: x + 1, y: y }, // Right
+                    { x: x, y: y - 1 }  // Up
+                ];
+
+                for (const neighbor of neighbors) {
+                    if (neighbor.x >= 0 && neighbor.x < width && neighbor.y >= 0 && neighbor.y < height && !visited.has(neighbor.x + ',' + neighbor.y) && grid[neighbor.y][neighbor.x] !== -1) {
+                        priorityQueue.push({
+                            x: neighbor.x,
+                            y: neighbor.y,
+                            h: manhattan(neighbor.x, neighbor.y),
+                            path: newPath
+                        });
+                    }
+                }
+            }
+            alert("No path found");
+        }
+
+        function manhattan(x, y) {
+            return Math.abs(x - goal.x) + Math.abs(y - goal.y);
+        }
+        function manhattan(x, y) {
+            return Math.abs(x - goal.x) + Math.abs(y - goal.y);
+        }
+
 
         function renderPath(path) {
             const gridContainer = document.getElementById('gridContainer');
